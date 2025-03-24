@@ -5,6 +5,10 @@ import java.awt.event.KeyListener;
 
 public class Keys implements KeyListener {
     public boolean up, down, left, right;
+    public boolean checkoutDrawTime;
+    public boolean enter;
+    public boolean keyPressed=false;
+
     @Override
     public void keyTyped(KeyEvent e) {
 
@@ -29,6 +33,10 @@ public class Keys implements KeyListener {
             right = true;
             System.out.println("D");
         }
+        if(keyCode == KeyEvent.VK_ENTER) {
+            enter = true;
+            System.out.println("Enter");
+        }
     }
 
     @Override
@@ -49,6 +57,9 @@ public class Keys implements KeyListener {
         if(keyCode == KeyEvent.VK_D) {
             right = false;
 
+        }
+        if(keyCode == KeyEvent.VK_ENTER) {
+            enter = false;
         }
     }
 }
