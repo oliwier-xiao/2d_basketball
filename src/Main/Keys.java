@@ -7,6 +7,7 @@ public class Keys implements KeyListener {
     public boolean up, down, left, right;
     public boolean checkoutDrawTime;
     public boolean enter;
+    public boolean escape;
     public boolean keyPressed=false;
 
     @Override
@@ -37,6 +38,9 @@ public class Keys implements KeyListener {
             enter = true;
             System.out.println("Enter");
         }
+        if(keyCode == KeyEvent.VK_ESCAPE) {
+            escape = true;
+        }
     }
 
     @Override
@@ -60,6 +64,9 @@ public class Keys implements KeyListener {
         }
         if(keyCode == KeyEvent.VK_ENTER) {
             enter = false;
+        }
+        if(keyCode == KeyEvent.VK_ESCAPE) {
+            escape = false;
         }
     }
 }
