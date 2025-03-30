@@ -2,28 +2,36 @@ package Main;
 
 import Entity.Enemy;
 import Entity.Player;
+import map.TileManager;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 
 public class Game_Panel extends JPanel implements Runnable {
 
+    // SCREEN SETTINGS
     final int originalTileSize = 16; // 16x16 pikseli dla obiektu
     final int scale = 3;
 
-    public final int tileSize = originalTileSize * scale;
-    final int maxScreenCol = 16;
-    final int maxScreenRow = 12;
-    public final int ScreenWidth = tileSize * maxScreenCol;
-    public final int ScreenHeight = tileSize * maxScreenRow;
+    public final int tileSize = originalTileSize * scale; // 48x48
+    public final int maxScreenCol = 16;
+    public final int maxScreenRow = 12;
+    public final int ScreenWidth = tileSize * maxScreenCol; // 768 pikseli
+    public final int ScreenHeight = tileSize * maxScreenRow; // 576 pikseli
+
+    //WORLD SETTINGS
+    public final int maxWorldCol = 57;
+    public final int maxWorldRow = 57;
+    public final int worldWidth = tileSize * maxWorldCol;
+    public final int worldHeight = tileSize * maxWorldRow;
 
     int FPS = 60;
     UI ui;
+    public TileManager tileManager;
 
     public Keys key = new Keys();
     Thread gameThread;
-    Player player = new Player(this, key);
+    public Player player = new Player(this, key);
     Enemy enemy = new Enemy(this, 2);
 
     // GAME STATES
@@ -45,6 +53,7 @@ public class Game_Panel extends JPanel implements Runnable {
         setupGame();
 
         ui = new UI(this);
+        tileManager = new TileManager(this, maxWorldCol, maxWorldRow);
     }
 
     public void setupGame() {
@@ -131,20 +140,24 @@ public class Game_Panel extends JPanel implements Runnable {
 
         // Debugowanie rysowania
         long drawStart = 0;
-        if (key.checkoutDrawTime == true) {
+        if (key.checkoutDrawTime) {
             drawStart = System.nanoTime();
         }
 
+         // Rysowanie mapy
         ui.draw(g2); // Rysowanie Interfejsu Użytkownika
 
         if (gameState == playState) {
+            tileManager.draw(g2);
             player.draw(g2);
-            enemy.draw(g2);
+          //  enemy.draw(g2);
+            this.setOpaque(false); // Ustawienie przezroczystości tła
         }
 
-        if (key.checkoutDrawTime == true) {
+        if (key.checkoutDrawTime) {
             long drawEnd = System.nanoTime();
             long elapsedTime = drawEnd - drawStart;
+            System.out.println("Draw Time: " + elapsedTime);
         }
 
         g2.dispose();
