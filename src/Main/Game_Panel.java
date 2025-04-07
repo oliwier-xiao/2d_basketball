@@ -69,7 +69,7 @@ public class Game_Panel extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        double drawInterval = 1000000000 / FPS;
+        double drawInterval = (double) 1000000000 / FPS;
         double nextDrawTime = System.nanoTime() + drawInterval;
 
         while (gameThread != null) {
@@ -144,14 +144,14 @@ public class Game_Panel extends JPanel implements Runnable {
             drawStart = System.nanoTime();
         }
 
-         // Rysowanie mapy
+        // Rysowanie mapy
         ui.draw(g2); // Rysowanie Interfejsu Użytkownika
 
         if (gameState == playState) {
             tileManager.draw(g2);
             player.draw(g2);
-          //  enemy.draw(g2);
-            this.setOpaque(false); // Ustawienie przezroczystości tła
+            //  enemy.draw(g2);
+            this.setBackground(Color.decode("#f8b48c"));
         }
 
         if (key.checkoutDrawTime) {

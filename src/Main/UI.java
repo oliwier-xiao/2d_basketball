@@ -9,7 +9,6 @@ public class UI {
     Game_Panel gp;
     Font arial_40, arial_80;
     BufferedImage keyImage;
-    public boolean gameFinished;
 
     public UI(Game_Panel gp) {
         this.gp = gp;

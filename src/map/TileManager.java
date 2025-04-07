@@ -59,6 +59,10 @@ public class TileManager extends JPanel {
                             worldY - gp.tileSize < gp.player.Worldy + gp.player.screenY + gp.tileSize) {
                         g2.drawImage(tiles[y][x], screenX, screenY, TILE_SIZE, TILE_SIZE, null);
                     }
+                    if (tileObjects[y][x].collision) {
+                        g2.setColor(Color.RED);
+                        g2.drawRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                    }
                 }
             }
         }

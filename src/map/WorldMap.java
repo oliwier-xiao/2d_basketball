@@ -62,10 +62,10 @@ public class WorldMap {
             { "image1x57.avif", "image2x57.avif", "image3x57.avif", "image4x57.avif", "image5x57.avif", "image6x57.avif", "image7x57.avif", "image8x57.avif", "image9x57.avif", "image10x57.avif", "image11x57.avif", "image12x57.avif", "image13x57.avif", "image14x57.avif", "image15x57.avif", "image16x57.avif", "image17x57.avif", "image18x57.avif", "image19x57.avif", "image20x57.avif", "image21x57.avif", "image22x57.avif", "image23x57.avif", "image24x57.avif", "image25x57.avif", "image26x57.avif", "image27x57.avif", "image28x57.avif", "image29x57.avif", "image30x57.avif", "image31x57.avif", "image32x57.avif", "image33x57.avif", "image34x57.avif", "image35x57.avif", "image36x57.avif", "image37x57.avif", "image38x57.avif", "image39x57.avif", "image40x57.avif", "image41x57.avif", "image42x57.avif", "image43x57.avif", "image44x57.avif", "image45x57.avif", "image46x57.avif", "image47x57.avif", "image48x57.avif", "image49x57.avif", "image50x57.avif", "image51x57.avif", "image52x57.avif", "image53x57.avif", "image54x57.avif", "image55x57.avif", "image56x57.avif", "image57x57.avif" }
     };
 
-public static String getTilePath(int x, int y) {
-    if (x < 0 || x >= 57 || y < 0 || y >= 57) {
-        throw new IndexOutOfBoundsException("Coordinates out of bounds");
+    public static String getTilePath(int x, int y) {
+        if (y < 0 || y >= map.length || x < 0 || x >= map[0].length) {
+            throw new IndexOutOfBoundsException("Coordinates out of bounds");
+        }
+        return BASE_PATH + map[y][x];
     }
-    return BASE_PATH + map[y][x];
-}
 }

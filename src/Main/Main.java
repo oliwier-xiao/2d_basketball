@@ -15,7 +15,6 @@ public class Main {
         frame.add(game_panel);
 
         frame.pack();
-
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
