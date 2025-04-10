@@ -4,10 +4,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class Keys implements KeyListener {
-    public boolean up, down, left, right;
+    public boolean up, down, left, right, enter, escape, shoot;
     public boolean checkoutDrawTime;
-    public boolean enter;
-    public boolean escape;
     public boolean keyPressed=false;
 
     @Override
@@ -41,6 +39,10 @@ public class Keys implements KeyListener {
         if(keyCode == KeyEvent.VK_ESCAPE) {
             escape = true;
         }
+        if(keyCode == KeyEvent.VK_SPACE) {
+            shoot = true;
+            System.out.println("Space");
+        }
     }
 
     @Override
@@ -67,6 +69,9 @@ public class Keys implements KeyListener {
         }
         if(keyCode == KeyEvent.VK_ESCAPE) {
             escape = false;
+        }
+        if(keyCode == KeyEvent.VK_SPACE) {
+            shoot = false;
         }
     }
 }

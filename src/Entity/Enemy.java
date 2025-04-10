@@ -7,12 +7,13 @@ public class Enemy extends Entity {
     private Random random;
     Game_Panel g;
 
-    public Enemy(Game_Panel g, int speed) {
+    public Enemy(Game_Panel gp, int speed) {
+        super(gp);
         this.random = new Random();
         this.Worldx = random.nextInt(800); // Assuming map width is 800
         this.Worldy = random.nextInt(600); // Assuming map height is 600
         this.speed = speed;
-        this.g = g;
+        this.g = gp;
     }
 
     public void update() {

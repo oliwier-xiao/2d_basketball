@@ -1,8 +1,8 @@
-// src/Entity/Player.java
 package Entity;
 
 import Main.Game_Panel;
 import Main.Keys;
+import Object.OBJ_Basketball;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -15,15 +15,14 @@ public class Player extends Entity {
 
     public int screenX;
     public int screenY;
-    public int hasball = 1;
-
     public int scale = 2; // Współczynnik skalowania
 
     public Player(Game_Panel gp, Keys key) {
+        super(gp);
         this.gp = gp;
         this.key = key;
         setDefaultValues();
-        getPlayerImage();
+        getImage();
         direction = "right";
     }
 
@@ -33,9 +32,11 @@ public class Player extends Entity {
         speed = 4;
         screenX = gp.ScreenWidth / 2 - gp.tileSize / 2;
         screenY = gp.ScreenHeight / 2 - gp.tileSize / 2;
+        hasball = 1; // Domyślnie gracz ma piłkę
+        projectile = new OBJ_Basketball(gp);
     }
 
-    public void getPlayerImage() {
+    public void getImage() {
         try {
             up1 = ImageIO.read(getClass().getResourceAsStream("/Player/playerball_up1.png"));
             up2 = ImageIO.read(getClass().getResourceAsStream("/Player/playerball_up2.png"));
@@ -51,6 +52,17 @@ public class Player extends Entity {
     }
 
     public void update() {
+        handleMovement();
+        updateSprite();
+        checkMapBoundaries();
+
+        if (gp.key.shoot) {
+            shootProjectile();
+            gp.key.shoot = false;
+        }
+    }
+
+    private void handleMovement() {
         if (key.up) {
             direction = "up";
             Worldy -= speed;
@@ -64,30 +76,27 @@ public class Player extends Entity {
             direction = "right";
             Worldx += speed;
         }
+    }
 
+    private void updateSprite() {
         spriteCounter++;
-        if(spriteCounter>12){
-            if(spriteNum == 1){
-                spriteNum = 2;
-            } else if (spriteNum == 2){
-                spriteNum = 1;
-            }
+        if (spriteCounter > 12) {
+            spriteNum = (spriteNum == 1) ? 2 : 1;
             spriteCounter = 0;
         }
+    }
 
+    private void checkMapBoundaries() {
+        Worldx = Math.max(0, Math.min(Worldx, gp.worldWidth - gp.tileSize));
+        Worldy = Math.max(0, Math.min(Worldy, gp.worldHeight - gp.tileSize));
+    }
 
-        // Sprawdzenie granic mapy
-        if (Worldx < 0) {
-            Worldx = 0;
-        } else if (Worldx > gp.worldWidth - gp.tileSize) {
-            Worldx = gp.worldWidth - gp.tileSize;
-        }
-
-        if (Worldy < 0) {
-            Worldy = 0;
-        } else if (Worldy > gp.worldHeight - gp.tileSize) {
-            Worldy = gp.worldHeight - gp.tileSize;
-        }
+    private void shootProjectile() {
+        projectileX = Worldx + (gp.tileSize / 2) - 12;
+        projectileY = Worldy + (gp.tileSize / 2) - 12;
+        Projectile newProjectile = new OBJ_Basketball(gp); // Create a new object
+        newProjectile.set(projectileX, projectileY, direction, true, this);
+        gp.projectileList.add(newProjectile);
     }
 
     public void draw(Graphics2D g2) {

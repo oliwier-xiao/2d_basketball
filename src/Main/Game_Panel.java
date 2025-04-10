@@ -1,11 +1,14 @@
 package Main;
 
 import Entity.Enemy;
+import Entity.Entity;
 import Entity.Player;
+import Entity.Projectile;
 import map.TileManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Game_Panel extends JPanel implements Runnable {
 
@@ -31,8 +34,12 @@ public class Game_Panel extends JPanel implements Runnable {
 
     public Keys key = new Keys();
     Thread gameThread;
+
+
     public Player player = new Player(this, key);
     Enemy enemy = new Enemy(this, 2);
+    public ArrayList<Entity> projectileList= new ArrayList<>();
+
 
     // GAME STATES
     public int gameState;
@@ -62,18 +69,39 @@ public class Game_Panel extends JPanel implements Runnable {
 
     public void startGameThread() {
         if (gameThread == null) {
-            gameThread = new Thread(this);
-            gameThread.start();
+            // ---------------------------------------------------------------
+            // Swing Timer-based game loop (runs on EDT):
+            // - Synchronizes game updates/rendering with Swing's event thread
+            // - Prevents thread conflicts between key events and game state
+            // - Includes error handling to prevent silent failures
+            // ---------------------------------------------------------------
+            Timer timer = new Timer(1000 / FPS, e -> {
+                try {
+                    update();
+                    repaint();
+                } catch (Exception ex) {
+                    System.err.println("Game loop error:");
+                    ex.printStackTrace();
+                }
+            });
+            timer.setRepeats(true);
+            timer.start();
         }
     }
 
     @Override
     public void run() {
+        /* Original method to run the game loop on a separate thread switched
+        to more efficient method cause of the player glitching:
+         1. Calculates precise frame timing using System.nanoTime()
+         2. Tries to maintain FPS via Thread.sleep()
+         3. Causes thread conflicts between key events (EDT) and game updates
+        //
         double drawInterval = (double) 1000000000 / FPS;
         double nextDrawTime = System.nanoTime() + drawInterval;
 
         while (gameThread != null) {
-            update();
+           update();
             repaint();
             try {
                 double remainingTime = nextDrawTime - System.nanoTime();
@@ -86,6 +114,8 @@ public class Game_Panel extends JPanel implements Runnable {
                 e.printStackTrace();
             }
         }
+
+         */
     }
 
     public void update() {
@@ -117,12 +147,30 @@ public class Game_Panel extends JPanel implements Runnable {
         if (gameState == playState) {
             player.update();
             enemy.update();
+            for (int i = 0; i < projectileList.size(); i++) {
+                Entity e = projectileList.get(i);
+                if (e != null) {
+                    if (e.alive && e.life > 0) {
+                        if (e instanceof Projectile) {
+                            ((Projectile) e).update();
+                        }
+                    } else {
+                        projectileList.remove(i);
+                        i--;
+                    }
+                }
+            }
+
             if (key.escape) {
                 gameState = pauseState;
                 key.escape = false; // Resetowanie flagi escape
             }
+
+
+
         }
         if (gameState == pauseState) {
+            this.setBackground(Color.black);
             if (key.enter) {
                 gameState = playState;
                 key.enter = false; // Resetowanie flagi enter
@@ -132,6 +180,7 @@ public class Game_Panel extends JPanel implements Runnable {
                 key.escape = false; // Resetowanie flagi enter
             }
         }
+
     }
 
     public void paintComponent(Graphics g) {
@@ -152,6 +201,12 @@ public class Game_Panel extends JPanel implements Runnable {
             player.draw(g2);
             //  enemy.draw(g2);
             this.setBackground(Color.decode("#f8b48c"));
+            for (int i = 0; i < projectileList.size(); i++) {
+                Projectile p = (Projectile) projectileList.get(i);
+                if (p != null && p.alive) {
+                    p.draw(g2);
+                }
+            }
         }
 
         if (key.checkoutDrawTime) {
