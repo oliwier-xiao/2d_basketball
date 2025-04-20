@@ -21,10 +21,12 @@ public class TileManager extends JPanel {
         this.gp = gp;
         this.maxWorldCol = maxWorldCol;
         this.maxWorldRow = maxWorldRow;
-        tiles = new BufferedImage[maxWorldCol][maxWorldRow];
-        tileObjects = new Tile[maxWorldCol][maxWorldRow];
+        // CORRECTED: Swap array dimensions to [maxWorldRow][maxWorldCol]
+        tiles = new BufferedImage[maxWorldRow][maxWorldCol];
+        tileObjects = new Tile[maxWorldRow][maxWorldCol];
         loadTiles();
     }
+
 
     private void loadTiles() {
         for (int y = 0; y < maxWorldRow; y++) {
