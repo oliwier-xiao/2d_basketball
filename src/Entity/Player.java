@@ -13,12 +13,13 @@ public class Player extends Entity {
     Game_Panel gp;
     Keys key;
 
-    public int screenX;
-    public int screenY;
+    public OBJ_Basketball basketball;
+    public int screenX, screenY;
     public int scale = 2; // Współczynnik skalowania
 
     public Player(Game_Panel gp, Keys key) {
         super(gp);
+        basketball = new OBJ_Basketball(gp);
         this.gp = gp;
         this.key = key;
         setDefaultValues();
@@ -29,7 +30,7 @@ public class Player extends Entity {
     public void setDefaultValues() {
         Worldx = gp.tileSize * 10;
         Worldy = gp.tileSize * 10;
-        speed = 4;
+        speed = 15;
         screenX = gp.ScreenWidth / 2 - gp.tileSize / 2;
         screenY = gp.ScreenHeight / 2 - gp.tileSize / 2;
         hasball = 1; // Domyślnie gracz ma piłkę
@@ -55,6 +56,9 @@ public class Player extends Entity {
         handleMovement();
         updateSprite();
         checkMapBoundaries();
+        if (basketball != null) {
+            basketball.updateCooldown();
+        }
 
         if (gp.key.shoot) {
             shootProjectile();
@@ -63,19 +67,52 @@ public class Player extends Entity {
     }
 
     private void handleMovement() {
+        int newWorldx = Worldx;
+        int newWorldy = Worldy;
+
         if (key.up) {
-            direction = "up";
-            Worldy -= speed;
+            newWorldy -= speed;
         } else if (key.down) {
-            direction = "down";
-            Worldy += speed;
+            newWorldy += speed;
         } else if (key.left) {
-            direction = "left";
-            Worldx -= speed;
+            newWorldx -= speed;
         } else if (key.right) {
-            direction = "right";
-            Worldx += speed;
+            newWorldx += speed;
         }
+
+        // Check collision at the new position
+        if (!checkCollision(newWorldx, newWorldy)) {
+            Worldx = newWorldx;
+            Worldy = newWorldy;
+            // Update direction after confirming movement
+            if (key.up) direction = "up";
+            else if (key.down) direction = "down";
+            else if (key.left) direction = "left";
+            else if (key.right) direction = "right";
+        }
+    }
+
+    private boolean checkCollision(int newWorldx, int newWorldy) {
+        int scaledSize = gp.tileSize * scale;
+        int playerLeft = newWorldx;
+        int playerRight = newWorldx + scaledSize;
+        int playerTop = newWorldy;
+        int playerBottom = newWorldy + scaledSize;
+
+        // Calculate the tiles the player's hitbox covers
+        int startCol = playerLeft / gp.tileSize;
+        int startRow = playerTop / gp.tileSize;
+        int endCol = (playerRight - 1) / gp.tileSize;
+        int endRow = (playerBottom - 1) / gp.tileSize;
+
+        for (int col = startCol; col <= endCol; col++) {
+            for (int row = startRow; row <= endRow; row++) {
+                if (gp.tileManager.checkCollision(col * gp.tileSize, row * gp.tileSize)) {
+                    return true; // Collision detected
+                }
+            }
+        }
+        return false; // No collision
     }
 
     private void updateSprite() {
@@ -92,11 +129,19 @@ public class Player extends Entity {
     }
 
     private void shootProjectile() {
-        projectileX = Worldx + (gp.tileSize / 2) - 12;
-        projectileY = Worldy + (gp.tileSize / 2) - 12;
-        Projectile newProjectile = new OBJ_Basketball(gp); // Create a new object
-        newProjectile.set(projectileX, projectileY, direction, true, this);
-        gp.projectileList.add(newProjectile);
+        if (basketball != null && basketball.isReady()) {
+            projectileX = Worldx + (gp.tileSize / 2) - 12;
+            projectileY = Worldy + (gp.tileSize / 2) - 12;
+            Projectile newProjectile = new OBJ_Basketball(gp); // Create a new object
+            newProjectile.set(projectileX, projectileY, direction, true, this);
+            gp.projectileList.add(newProjectile);
+            basketball.startCooldown();
+
+            if (gp.projectileList.size() > 10) {
+                gp.projectileList.remove(0);
+            }
+
+        }
     }
 
     public void draw(Graphics2D g2) {

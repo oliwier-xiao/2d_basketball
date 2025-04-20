@@ -34,7 +34,7 @@ public class TileManager extends JPanel {
                     tiles[y][x] = ImageIO.read(new File(path));
                     tileObjects[y][x] = new Tile();
                     tileObjects[y][x].setImage(tiles[y][x]);
-                    if (x == 0 || y == 0 || x == maxWorldCol - 1 || y == maxWorldRow - 1) {
+                    if (x <= 0 || y <= 0 || x >= maxWorldCol - 1 || y >= maxWorldRow - 1) {
                         tileObjects[y][x].collision = true;
                     }
                 } catch (IOException e) {
@@ -66,6 +66,7 @@ public class TileManager extends JPanel {
                 }
             }
         }
+
     }
 
     public boolean checkCollision(int worldX, int worldY) {

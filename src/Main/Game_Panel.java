@@ -5,6 +5,7 @@ import Entity.Entity;
 import Entity.Player;
 import Entity.Projectile;
 import map.TileManager;
+import Object.SuperObject;
 
 import javax.swing.*;
 import java.awt.*;
@@ -40,6 +41,8 @@ public class Game_Panel extends JPanel implements Runnable {
     Enemy enemy = new Enemy(this, 2);
     public ArrayList<Entity> projectileList= new ArrayList<>();
 
+    public SuperObject obj[] = new SuperObject[10];
+    public AssetManager aManager;
 
     // GAME STATES
     public int gameState;
@@ -56,15 +59,19 @@ public class Game_Panel extends JPanel implements Runnable {
         this.addKeyListener(key);
         this.setFocusable(true);
         selectedOption = 0;
-        startGameThread();
-        setupGame();
+
 
         ui = new UI(this);
         tileManager = new TileManager(this, maxWorldCol, maxWorldRow);
+
+        setupGame();
+        startGameThread();
     }
 
     public void setupGame() {
+        aManager = new AssetManager(this);
         gameState = TitleState;
+        aManager.setObject();
     }
 
     public void startGameThread() {
@@ -194,7 +201,7 @@ public class Game_Panel extends JPanel implements Runnable {
         }
 
         // Rysowanie mapy
-        ui.draw(g2); // Rysowanie Interfejsu Użytkownika
+        // Rysowanie Interfejsu Użytkownika
 
         if (gameState == playState) {
             tileManager.draw(g2);
@@ -207,6 +214,22 @@ public class Game_Panel extends JPanel implements Runnable {
                     p.draw(g2);
                 }
             }
+            for (SuperObject object : obj) {
+                if (object != null && object.image != null) {
+                    // Draw the image at its NATIVE size (128x128)
+                    g2.drawImage(
+                            object.image,
+                            object.worldX - player.Worldx + player.screenX,
+                            object.worldY - player.Worldy + player.screenY,
+                            object.image.getWidth(),
+                            object.image.getHeight(),
+                            null
+                    );
+                }
+            }
+            ui.draw(g2);
+        }else{
+            ui.draw(g2);
         }
 
         if (key.checkoutDrawTime) {
