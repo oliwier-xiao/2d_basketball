@@ -123,12 +123,10 @@ public class UI {
         int hoopXWorld = gp.obj[0].worldX;
         int hoopYWorld = gp.obj[0].worldY;
 
-        // Calculate a direction from player to hoop
+        // Calculate direction from player to hoop
         double deltaX = hoopXWorld - playerX;
         double deltaY = hoopYWorld - playerY;
         double angle = Math.atan2(deltaY, deltaX);
-
-        int screenX, screenY;
 
         // Determine if hoop is off-screen
         boolean isOffScreen = (hoopXWorld < playerX - gp.player.screenX ||
@@ -141,30 +139,23 @@ public class UI {
             double directionX = deltaX / Math.hypot(deltaX, deltaY);
             double directionY = deltaY / Math.hypot(deltaX, deltaY);
 
-            screenX = (int) (gp.ScreenWidth / 2 + directionX * (gp.ScreenWidth / 2 - 20));
-            screenY = (int) (gp.ScreenHeight / 2 + directionY * (gp.ScreenHeight / 2 - 20));
-        } else {
-            // Use hoop's on-screen position
-            screenX = gp.obj[0].worldX - playerX + gp.player.screenX;
-            screenY = gp.obj[0].worldY - playerY + gp.player.screenY;
-        }
+            int screenX = (int) (gp.ScreenWidth / 2 + directionX * (gp.ScreenWidth / 2 - 20));
+            int screenY = (int) (gp.ScreenHeight / 2 + directionY * (gp.ScreenHeight / 2 - 20));
 
-        if (arrowImage != null) {
-
-            AffineTransform oldTransform = g2.getTransform();
-            g2.translate(screenX, screenY);
-            g2.rotate(angle);
-            // Center the 16x16 image (-8 offset)
-            g2.drawImage(arrowImage, -8, -8, null);
-            g2.setTransform(oldTransform);
-        } else {
-            // Fallback to original arrow drawing
-            int arrowX = (int) (screenX + Math.cos(angle) * 30);
-            int arrowY = (int) (screenY + Math.sin(angle) * 30);
-            g2.setColor(Color.YELLOW);
-            g2.drawLine(screenX, screenY, arrowX, arrowY);
-            g2.fillPolygon(new int[]{arrowX, arrowX - 5, arrowX + 5}, new int[]{arrowY, arrowY - 10, arrowY - 10}, 3);
+            if (arrowImage != null) {
+                AffineTransform oldTransform = g2.getTransform();
+                g2.translate(screenX, screenY);
+                g2.rotate(angle);
+                g2.drawImage(arrowImage, -8, -8, null);
+                g2.setTransform(oldTransform);
+            } else {
+                // Fallback arrow drawing
+                int arrowX = (int) (screenX + Math.cos(angle) * 30);
+                int arrowY = (int) (screenY + Math.sin(angle) * 30);
+                g2.setColor(Color.YELLOW);
+                g2.drawLine(screenX, screenY, arrowX, arrowY);
+                g2.fillPolygon(new int[]{arrowX, arrowX - 5, arrowX + 5}, new int[]{arrowY, arrowY - 10, arrowY - 10}, 3);
+            }
         }
     }
-
 }
