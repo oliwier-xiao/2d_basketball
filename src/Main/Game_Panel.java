@@ -52,6 +52,10 @@ public class Game_Panel extends JPanel implements Runnable {
     public final int endState = 3;
     public int selectedOption;
 
+    // SCORING
+    public int score = 0;
+
+
     public Game_Panel() {
         this.setPreferredSize(new Dimension(ScreenWidth, ScreenHeight));
         this.setBackground(Color.black);
@@ -160,6 +164,13 @@ public class Game_Panel extends JPanel implements Runnable {
                     if (e.alive && e.life > 0) {
                         if (e instanceof Projectile) {
                             ((Projectile) e).update();
+
+                            // Check collision with hoop
+                            if (checkProjectileHoopCollision(e)) {
+                                score++;
+                                aManager.setObject(); // Respawn hoop
+                                e.alive = false;
+                            }
                         }
                     } else {
                         projectileList.remove(i);
@@ -167,6 +178,10 @@ public class Game_Panel extends JPanel implements Runnable {
                     }
                 }
             }
+
+
+
+
 
             if (key.escape) {
                 gameState = pauseState;
@@ -240,4 +255,25 @@ public class Game_Panel extends JPanel implements Runnable {
 
         g2.dispose();
     }
+
+    // Check collision with tiles
+    public boolean checkProjectileHoopCollision(Entity projectile) {
+        if (obj[0] == null) return false;
+
+        SuperObject hoop = obj[0];
+        // Projectile bounds
+        int pLeft = projectile.Worldx;
+        int pRight = pLeft + this.tileSize;
+        int pTop = projectile.Worldy;
+        int pBottom = pTop + this.tileSize;
+
+        // Hoop's collision bounds
+        int hLeft = hoop.worldX + hoop.solidArea.x;
+        int hRight = hLeft + hoop.solidArea.width;
+        int hTop = hoop.worldY + hoop.solidArea.y;
+        int hBottom = hTop + hoop.solidArea.height;
+
+        return pLeft < hRight && pRight > hLeft && pTop < hBottom && pBottom > hTop;
+    }
+
 }

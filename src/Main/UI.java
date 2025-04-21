@@ -33,12 +33,16 @@ public class UI {
         }
 
         if(gp.gameState==gp.playState) {
+            // Arrow
             try {
                 arrowImage = javax.imageio.ImageIO.read(getClass().getResourceAsStream("/Objects/Arrow.png"));
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
+            // Score
+
+            //Basketball cooldown
             if (gp.player.basketball != null) {
                 float cooldownPercentage = gp.player.basketball.getCooldownPercentage();
                 int barWidth = 200;
@@ -60,7 +64,7 @@ public class UI {
                 int textWidth = g2.getFontMetrics().stringWidth(text);
                 g2.drawString(text, (gp.ScreenWidth - textWidth) / 2, y + barHeight + 15);
             }
-
+            ScoreBoard(g2);
             drawHoopArrows(g2);
         }
 
@@ -158,4 +162,14 @@ public class UI {
             }
         }
     }
+    private void ScoreBoard(Graphics2D g2) {
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("Arial", Font.BOLD, 24));
+        String scoreText = "Score: " + gp.score;
+        int scoreX = gp.ScreenWidth - 150; // Adjust position as needed
+        int scoreY = 30;
+        g2.drawString(scoreText, scoreX, scoreY);
+
+    }
+
 }
