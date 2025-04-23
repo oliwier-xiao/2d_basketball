@@ -5,17 +5,23 @@ import java.awt.image.BufferedImage;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import javax.imageio.ImageIO;
+import Object.OBJ_Heart;
 
 public class UI {
 
     Game_Panel gp;
     Font arial_40, arial_80;
     BufferedImage arrowImage;
+    private OBJ_Heart[] hearts = new OBJ_Heart[3];
 
     public UI(Game_Panel gp) {
         this.gp = gp;
         arial_40 = new Font("arial", Font.PLAIN, 40);
         arial_80 = new Font("arial", Font.BOLD, 80);
+
+        for(int i = 0; i < hearts.length; i++) {
+            hearts[i] = new OBJ_Heart();
+        }
     }
 
     public void draw(Graphics g) {
@@ -66,6 +72,7 @@ public class UI {
             }
             ScoreBoard(g2);
             drawHoopArrows(g2);
+            drawHearts(g2);
         }
 
 
@@ -108,12 +115,14 @@ public class UI {
             g2.drawString("Press Esc to Return to Menu", 80, 220);
         }
         if (gp.gameState==gp.endState) {
-            g.setColor(Color.black);
-            g.fillRect(0, 0, gp.ScreenWidth, gp.ScreenHeight);
+            g2.setColor(Color.black);
+            g2.fillRect(0, 0, gp.ScreenWidth, gp.ScreenHeight);
 
-            g.setColor(Color.white);
-            g.setFont(arial_80);
-            g.drawString("You Won !", 100, 100);
+            g2.setColor(Color.white);
+            g2.setFont(arial_80);
+            String text = "GAME OVER";
+            int textWidth = g2.getFontMetrics().stringWidth(text);
+            g2.drawString(text, (gp.ScreenWidth - textWidth)/2, gp.ScreenHeight/2);
 
             gp.gameThread = null;
         } else {
@@ -166,10 +175,24 @@ public class UI {
         g2.setColor(Color.WHITE);
         g2.setFont(new Font("Arial", Font.BOLD, 24));
         String scoreText = "Score: " + gp.score;
-        int scoreX = gp.ScreenWidth - 150; // Adjust position as needed
+        int scoreX = gp.ScreenWidth - 150;
         int scoreY = 30;
         g2.drawString(scoreText, scoreX, scoreY);
 
     }
 
+    private void drawHearts(Graphics2D g2) {
+        int x = 10;
+        int y = 10;
+        int spacing = 35;
+
+        for(int i = 0; i < hearts.length; i++) {
+            if(gp.player.life > i) {
+                hearts[i].image = hearts[i].full;
+            } else {
+                hearts[i].image = hearts[i].blank;
+            }
+            g2.drawImage(hearts[i].image, x + (i * spacing), y, 32, 32, null);
+        }
+    }
 }

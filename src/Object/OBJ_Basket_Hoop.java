@@ -11,13 +11,21 @@ public class OBJ_Basket_Hoop extends SuperObject {
         collision = true;
 
         try {
-            // Load the 128x128 image (no scaling!)
             image = ImageIO.read(getClass().getResourceAsStream("/Objects/basket_hoop.png"));
 
-            // Collision box (adjust as needed)
-            solidArea = new Rectangle(32, 64, 64, 32); // Example: Center-aligned
+
+            solidArea = new Rectangle(
+                    16,
+                    48,
+                    96,
+                    16
+            );
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // Dummy values
+        maxCooldown = 0;
+        spawnCooldown = 0;
     }
 }

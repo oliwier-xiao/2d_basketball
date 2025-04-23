@@ -1,7 +1,9 @@
 package Main;
 
 import Object.OBJ_Basket_Hoop;
-
+import Object.SuperObject;
+import Object.OBJ_Gatorade;
+import Object.OBJ_Dumbell;
 import java.util.Random;
 import java.util.Arrays;
 
@@ -15,30 +17,39 @@ public class AssetManager {
 
     public void setObject() {
         Arrays.fill(gp.obj, null);
-        gp.obj[0] = new OBJ_Basket_Hoop();
-        OBJ_Basket_Hoop hoop = (OBJ_Basket_Hoop) gp.obj[0];
 
+
+        gp.obj[0] = new OBJ_Basket_Hoop();
+        placeObject(gp.obj[0]);
+
+
+        gp.obj[1] = new OBJ_Gatorade();
+        gp.obj[6] = new OBJ_Dumbell();
+
+        for (int i = 1; i < gp.obj.length; i++) { // Skip index 0
+            if (gp.obj[i] != null) placeObject(gp.obj[i]);
+        }
+    }
+
+    void placeObject(SuperObject obj) {
         boolean collisionFound;
         do {
             collisionFound = false;
 
-            // Calculate buffer zones (5% of world size)
             int bufferX = (int) (gp.worldWidth * 0.05);
             int bufferY = (int) (gp.worldHeight * 0.05);
 
-            // Calculate max valid positions for X and Y
-            int maxValidX = gp.worldWidth - bufferX - hoop.image.getWidth();
-            int maxValidY = gp.worldHeight - bufferY - hoop.image.getHeight();
+            int maxValidX = gp.worldWidth - bufferX - obj.image.getWidth();
+            int maxValidY = gp.worldHeight - bufferY - obj.image.getHeight();
 
-            // Generate random positions within the valid range
-            hoop.worldX = bufferX + rand.nextInt(maxValidX - bufferX + 1); // +1 to include maxValidX
-            hoop.worldY = bufferY + rand.nextInt(maxValidY - bufferY + 1);
+            obj.worldX = bufferX + rand.nextInt(maxValidX - bufferX + 1);
+            obj.worldY = bufferY + rand.nextInt(maxValidY - bufferY + 1);
 
-            // Check collisions for tiles under the hoop
-            int startCol = hoop.worldX / gp.tileSize;
-            int startRow = hoop.worldY / gp.tileSize;
-            int endCol = (hoop.worldX + hoop.image.getWidth()) / gp.tileSize;
-            int endRow = (hoop.worldY + hoop.image.getHeight()) / gp.tileSize;
+            // Check tile collisions
+            int startCol = obj.worldX / gp.tileSize;
+            int startRow = obj.worldY / gp.tileSize;
+            int endCol = (obj.worldX + obj.image.getWidth()) / gp.tileSize;
+            int endRow = (obj.worldY + obj.image.getHeight()) / gp.tileSize;
 
             for (int col = startCol; col <= endCol; col++) {
                 for (int row = startRow; row <= endRow; row++) {
@@ -50,8 +61,28 @@ public class AssetManager {
                 if (collisionFound) break;
             }
         } while (collisionFound);
+        obj.timeActive = Math.max(60, 300 - (gp.score * 10));
+        obj.spawnCooldown = 0;
+        obj.active = true;
 
-        // Debug log
-        System.out.println("Hoop spawned at: " + hoop.worldX + ", " + hoop.worldY);
+        System.out.println("[SPAWN] " + obj.name + " at: " + obj.worldX + ", " + obj.worldY);
+    }
+
+    public void respawnObject(int index) {
+        if (index == 0) return; // Never modify hoop through this method
+
+        SuperObject obj = gp.obj[index];
+        if (obj != null) {
+            obj.active = false;
+            obj.spawnCooldown = obj.maxCooldown;
+        }
+    }
+    public void respawnHoop() {
+        // Only handle index 0 (hoop)
+        SuperObject hoop = gp.obj[0];
+        if (hoop != null) {
+            placeObject(hoop); // Reuse placement logic
+            System.out.println("Hoop respawned at: " + hoop.worldX + ", " + hoop.worldY);
+        }
     }
 }

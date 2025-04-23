@@ -3,6 +3,7 @@ package Entity;
 import Main.Game_Panel;
 import Main.Keys;
 import Object.OBJ_Basketball;
+import Object.SuperObject;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -10,7 +11,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 public class Player extends Entity {
-    Game_Panel gp;
+    public Game_Panel gp;
     Keys key;
 
     public OBJ_Basketball basketball;
@@ -30,11 +31,13 @@ public class Player extends Entity {
     public void setDefaultValues() {
         Worldx = gp.tileSize * 10;
         Worldy = gp.tileSize * 10;
-        speed = 15;
+        speed = 10;
+        life=3;
         screenX = gp.ScreenWidth / 2 - gp.tileSize / 2;
         screenY = gp.ScreenHeight / 2 - gp.tileSize / 2;
         hasball = 1; // Domyślnie gracz ma piłkę
         projectile = new OBJ_Basketball(gp);
+        damageCooldown=0;
     }
 
     public void getImage() {
@@ -64,6 +67,8 @@ public class Player extends Entity {
             shootProjectile();
             gp.key.shoot = false;
         }
+
+        if(damageCooldown > 0) damageCooldown--;
     }
 
     private void handleMovement() {
@@ -94,25 +99,47 @@ public class Player extends Entity {
 
     private boolean checkCollision(int newWorldx, int newWorldy) {
         int scaledSize = gp.tileSize * scale;
-        int playerLeft = newWorldx;
-        int playerRight = newWorldx + scaledSize;
-        int playerTop = newWorldy;
-        int playerBottom = newWorldy + scaledSize;
 
-        // Calculate the tiles the player's hitbox covers
-        int startCol = playerLeft / gp.tileSize;
-        int startRow = playerTop / gp.tileSize;
-        int endCol = (playerRight - 1) / gp.tileSize;
-        int endRow = (playerBottom - 1) / gp.tileSize;
+        // Player's projected hitbox
+        Rectangle playerHitbox = new Rectangle(
+                newWorldx,
+                newWorldy,
+                scaledSize,
+                scaledSize
+        );
+
+        // Check tile collisions
+        int startCol = newWorldx / gp.tileSize;
+        int startRow = newWorldy / gp.tileSize;
+        int endCol = (newWorldx + scaledSize) / gp.tileSize;
+        int endRow = (newWorldy + scaledSize) / gp.tileSize;
 
         for (int col = startCol; col <= endCol; col++) {
             for (int row = startRow; row <= endRow; row++) {
                 if (gp.tileManager.checkCollision(col * gp.tileSize, row * gp.tileSize)) {
-                    return true; // Collision detected
+                    return true;
                 }
             }
         }
-        return false; // No collision
+
+        // Check object collisions
+        for (SuperObject obj : gp.obj) {
+            if (obj != null && obj.collision) {
+                // Object's collision area in world coordinates
+                Rectangle objectHitbox = new Rectangle(
+                        obj.worldX + obj.solidArea.x,
+                        obj.worldY + obj.solidArea.y,
+                        obj.solidArea.width,
+                        obj.solidArea.height
+                );
+
+                if (playerHitbox.intersects(objectHitbox)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private void updateSprite() {
@@ -179,6 +206,33 @@ public class Player extends Entity {
             }
             int scaledSize = gp.tileSize * scale;
             g2.drawImage(image, screenX, screenY, scaledSize, scaledSize, null);
+        }
+
+
+    }
+    public void checkEnemyCollision() {
+        Rectangle playerHitbox = new Rectangle(
+                Worldx, Worldy,
+                gp.tileSize * scale,
+                gp.tileSize * scale
+        );
+
+        for(Enemy enemy : gp.enemyList) {
+            Rectangle enemyHitbox = new Rectangle(
+                    enemy.Worldx + enemy.solidArea.x,
+                    enemy.Worldy + enemy.solidArea.y,
+                    enemy.solidArea.width,
+                    enemy.solidArea.height
+            );
+
+            if(playerHitbox.intersects(enemyHitbox) && damageCooldown <= 0) {
+                life--;
+                damageCooldown = 60;
+                if(life <= 0) {
+                    gp.gameState = gp.endState;
+                }
+                break;
+            }
         }
     }
 }

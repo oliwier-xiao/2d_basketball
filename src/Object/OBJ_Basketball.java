@@ -10,7 +10,7 @@ import java.io.IOException;
 
 public class OBJ_Basketball extends Projectile {
     Game_Panel gp;
-    public static final int COOLDOWN_TIME = 300; // 5 seconds at 60 FPS (60*5=300)
+    public int cooldownDuration = 300; // Base cooldown (5 seconds at 60 FPS)
     public int cooldownCounter = 0;
 
     public OBJ_Basketball(Game_Panel gp) {
@@ -18,7 +18,7 @@ public class OBJ_Basketball extends Projectile {
         this.gp = gp;
 
         name = "Basketball";
-        speed = 5;
+        speed = 6;
         maxLife = 100;
         life = maxLife;
         attack = 0;
@@ -52,10 +52,11 @@ public class OBJ_Basketball extends Projectile {
     }
 
     public void startCooldown() {
-        cooldownCounter = COOLDOWN_TIME;
+        cooldownCounter = cooldownDuration;
     }
 
     public float getCooldownPercentage() {
-        return (float) cooldownCounter / COOLDOWN_TIME;
+        return (float) cooldownCounter / cooldownDuration;
     }
+
 }

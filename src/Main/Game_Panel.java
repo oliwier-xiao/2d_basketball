@@ -6,24 +6,28 @@ import Entity.Player;
 import Entity.Projectile;
 import map.TileManager;
 import Object.SuperObject;
+import Object.OBJ_Dumbell;
+import Object.OBJ_Gatorade;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 
+import javax.sound.sampled.Clip;
+
 public class Game_Panel extends JPanel implements Runnable {
 
     // SCREEN SETTINGS
-    final int originalTileSize = 16; // 16x16 pikseli dla obiektu
+    final int originalTileSize = 16; // 16x16 pixels for an object
     final int scale = 3;
 
     public final int tileSize = originalTileSize * scale; // 48x48
     public final int maxScreenCol = 16;
     public final int maxScreenRow = 12;
-    public final int ScreenWidth = tileSize * maxScreenCol; // 768 pikseli
-    public final int ScreenHeight = tileSize * maxScreenRow; // 576 pikseli
+    public final int ScreenWidth = tileSize * maxScreenCol; // 768 pixels
+    public final int ScreenHeight = tileSize * maxScreenRow; // 576 pixels
 
-    //WORLD SETTINGS
+    // WORLD SETTINGS
     public final int maxWorldCol = 57;
     public final int maxWorldRow = 41;
     public final int worldWidth = tileSize * maxWorldCol;
@@ -36,13 +40,15 @@ public class Game_Panel extends JPanel implements Runnable {
     public Keys key = new Keys();
     Thread gameThread;
 
-
     public Player player = new Player(this, key);
-    Enemy enemy = new Enemy(this, 2);
-    public ArrayList<Entity> projectileList= new ArrayList<>();
+    public ArrayList<Entity> projectileList = new ArrayList<>();
+    public ArrayList<Enemy> enemyList = new ArrayList<>();
 
     public SuperObject obj[] = new SuperObject[10];
     public AssetManager aManager;
+
+    //Sound
+    public Sound sound = new Sound();
 
     // GAME STATES
     public int gameState;
@@ -55,7 +61,6 @@ public class Game_Panel extends JPanel implements Runnable {
     // SCORING
     public int score = 0;
 
-
     public Game_Panel() {
         this.setPreferredSize(new Dimension(ScreenWidth, ScreenHeight));
         this.setBackground(Color.black);
@@ -63,7 +68,6 @@ public class Game_Panel extends JPanel implements Runnable {
         this.addKeyListener(key);
         this.setFocusable(true);
         selectedOption = 0;
-
 
         ui = new UI(this);
         tileManager = new TileManager(this, maxWorldCol, maxWorldRow);
@@ -76,16 +80,11 @@ public class Game_Panel extends JPanel implements Runnable {
         aManager = new AssetManager(this);
         gameState = TitleState;
         aManager.setObject();
+        sound.loadSounds();
     }
 
     public void startGameThread() {
         if (gameThread == null) {
-            // ---------------------------------------------------------------
-            // Swing Timer-based game loop (runs on EDT):
-            // - Synchronizes game updates/rendering with Swing's event thread
-            // - Prevents thread conflicts between key events and game state
-            // - Includes error handling to prevent silent failures
-            // ---------------------------------------------------------------
             Timer timer = new Timer(1000 / FPS, e -> {
                 try {
                     update();
@@ -102,35 +101,12 @@ public class Game_Panel extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        /* Original method to run the game loop on a separate thread switched
-        to more efficient method cause of the player glitching:
-         1. Calculates precise frame timing using System.nanoTime()
-         2. Tries to maintain FPS via Thread.sleep()
-         3. Causes thread conflicts between key events (EDT) and game updates
-        //
-        double drawInterval = (double) 1000000000 / FPS;
-        double nextDrawTime = System.nanoTime() + drawInterval;
-
-        while (gameThread != null) {
-           update();
-            repaint();
-            try {
-                double remainingTime = nextDrawTime - System.nanoTime();
-                remainingTime /= 1000000;
-                if (remainingTime > 0) {
-                    Thread.sleep((long) remainingTime);
-                    nextDrawTime += drawInterval;
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-         */
+        // Original method replaced with a Swing Timer-based game loop
     }
 
     public void update() {
         if (gameState == TitleState) {
+            sound.playTheme();
             if (!key.keyPressed) {
                 if (key.up) {
                     selectedOption = (selectedOption + 2) % 3;
@@ -147,17 +123,27 @@ public class Game_Panel extends JPanel implements Runnable {
             if (key.enter) {
                 if (selectedOption == 0) {
                     gameState = playState;
+                    sound.stopTheme();
                 } else if (selectedOption == 1) {
                     // Handle options
                 } else if (selectedOption == 2) {
                     System.exit(0);
                 }
-                key.enter = false; // Resetowanie flagi enter
+                key.enter = false;
             }
         }
         if (gameState == playState) {
+            if (key.movementStarted) {
+                sound.playDribble();
+            }
+            if (key.movementStopped) {
+                sound.stopDribble();
+            }
+            key.resetMovementFlags();
+
             player.update();
-            enemy.update();
+            player.checkEnemyCollision();
+            updateEnemies();
             for (int i = 0; i < projectileList.size(); i++) {
                 Entity e = projectileList.get(i);
                 if (e != null) {
@@ -168,8 +154,29 @@ public class Game_Panel extends JPanel implements Runnable {
                             // Check collision with hoop
                             if (checkProjectileHoopCollision(e)) {
                                 score++;
-                                aManager.setObject(); // Respawn hoop
+                                aManager.respawnHoop();
                                 e.alive = false;
+                                sound.playSwish();
+                            }
+
+                            // Check collision with enemies
+                            for (Enemy enemy : enemyList) {
+                                Rectangle projectileRect = new Rectangle(
+                                        e.Worldx, e.Worldy,
+                                        this.tileSize, this.tileSize
+                                );
+                                Rectangle enemyRect = new Rectangle(
+                                        enemy.Worldx + enemy.solidArea.x,
+                                        enemy.Worldy + enemy.solidArea.y,
+                                        enemy.solidArea.width,
+                                        enemy.solidArea.height
+                                );
+
+                                if (projectileRect.intersects(enemyRect)) {
+                                    score = Math.max(0, score - 1);
+                                    e.alive = false;
+                                    break;
+                                }
                             }
                         }
                     } else {
@@ -179,49 +186,39 @@ public class Game_Panel extends JPanel implements Runnable {
                 }
             }
 
-
-
-
-
             if (key.escape) {
                 gameState = pauseState;
-                key.escape = false; // Resetowanie flagi escape
+                key.escape = false;
             }
 
-
-
+            updateObjects();
+            manageObjectCount();
         }
         if (gameState == pauseState) {
             this.setBackground(Color.black);
             if (key.enter) {
                 gameState = playState;
-                key.enter = false; // Resetowanie flagi enter
+                key.enter = false;
             }
             if (key.escape) {
                 gameState = TitleState;
-                key.escape = false; // Resetowanie flagi enter
+                key.escape = false;
             }
         }
-
     }
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
 
-        // Debugowanie rysowania
         long drawStart = 0;
         if (key.checkoutDrawTime) {
             drawStart = System.nanoTime();
         }
 
-        // Rysowanie mapy
-        // Rysowanie Interfejsu Użytkownika
-
         if (gameState == playState) {
             tileManager.draw(g2);
             player.draw(g2);
-            //  enemy.draw(g2);
             this.setBackground(Color.decode("#f8b48c"));
             for (int i = 0; i < projectileList.size(); i++) {
                 Projectile p = (Projectile) projectileList.get(i);
@@ -229,9 +226,11 @@ public class Game_Panel extends JPanel implements Runnable {
                     p.draw(g2);
                 }
             }
+            for (Enemy enemy : enemyList) {
+                enemy.draw(g2);
+            }
             for (SuperObject object : obj) {
-                if (object != null && object.image != null) {
-                    // Draw the image at its NATIVE size (128x128)
+                if (object != null && object.active && object.image != null) {
                     g2.drawImage(
                             object.image,
                             object.worldX - player.Worldx + player.screenX,
@@ -242,9 +241,19 @@ public class Game_Panel extends JPanel implements Runnable {
                     );
                 }
             }
-            ui.draw(g2);
-        }else{
-            ui.draw(g2);
+            for (int i = 0; i < obj.length; i++) {
+                SuperObject object = obj[i];
+                if (object != null && object.active) {
+                    if (object.name.equals("Gatorade") && checkPlayerObjectCollision(object)) {
+                        player.speed++;
+                        aManager.respawnObject(i);
+                    } else if (object.name.equals("Dumbbell") && checkPlayerObjectCollision(object)) {
+                        player.basketball.cooldownDuration = (int) Math.max(60,
+                                player.basketball.cooldownDuration * 0.8);
+                        aManager.respawnObject(i);
+                    }
+                }
+            }
         }
 
         if (key.checkoutDrawTime) {
@@ -252,28 +261,113 @@ public class Game_Panel extends JPanel implements Runnable {
             long elapsedTime = drawEnd - drawStart;
             System.out.println("Draw Time: " + elapsedTime);
         }
-
+        ui.draw(g2);
         g2.dispose();
     }
 
-    // Check collision with tiles
     public boolean checkProjectileHoopCollision(Entity projectile) {
         if (obj[0] == null) return false;
 
         SuperObject hoop = obj[0];
-        // Projectile bounds
+
         int pLeft = projectile.Worldx;
         int pRight = pLeft + this.tileSize;
         int pTop = projectile.Worldy;
         int pBottom = pTop + this.tileSize;
 
-        // Hoop's collision bounds
-        int hLeft = hoop.worldX + hoop.solidArea.x;
-        int hRight = hLeft + hoop.solidArea.width;
-        int hTop = hoop.worldY + hoop.solidArea.y;
-        int hBottom = hTop + hoop.solidArea.height;
+        int rimLeft = hoop.worldX + 32;
+        int rimRight = rimLeft + 64;
+        int rimTop = hoop.worldY + 48;
+        int rimBottom = rimTop + 16;
 
-        return pLeft < hRight && pRight > hLeft && pTop < hBottom && pBottom > hTop;
+        return pLeft < rimRight &&
+                pRight > rimLeft &&
+                pTop < rimBottom &&
+                pBottom > rimTop;
     }
 
+    public boolean checkPlayerObjectCollision(SuperObject object) {
+        Rectangle playerRect = new Rectangle(
+                player.Worldx,
+                player.Worldy,
+                this.tileSize * player.scale,
+                this.tileSize * player.scale
+        );
+
+        Rectangle objectRect = new Rectangle(
+                object.worldX + object.solidArea.x,
+                object.worldY + object.solidArea.y,
+                object.solidArea.width,
+                object.solidArea.height
+        );
+
+        return playerRect.intersects(objectRect);
+    }
+
+    private void updateObjects() {
+        for (int i = 0; i < obj.length; i++) {
+            SuperObject object = obj[i];
+            if (object != null) {
+                if (object.active) {
+                    object.timeActive--;
+                    if (object.timeActive <= 0) {
+                        aManager.respawnObject(i);
+                    }
+                } else {
+                    object.spawnCooldown--;
+                    if (object.spawnCooldown <= 0) {
+                        aManager.placeObject(object);
+                    }
+                }
+            }
+        }
+    }
+
+    private void manageObjectCount() {
+        int targetCount = Math.min(5, 1 + (score / 5));
+
+        for (int i = 1; i <= 5; i++) {
+            if (i <= targetCount) {
+                if (obj[i] == null) {
+                    obj[i] = new OBJ_Gatorade();
+                    aManager.placeObject(obj[i]);
+                }
+            } else {
+                if (i < obj.length) obj[i] = null;
+            }
+        }
+
+        for (int i = 6; i <= 9; i++) {
+            if (i <= 6 + targetCount) {
+                if (obj[i] == null) {
+                    obj[i] = new OBJ_Dumbell();
+                    aManager.placeObject(obj[i]);
+                }
+            } else {
+                if (i < obj.length) obj[i] = null;
+            }
+        }
+    }
+
+    private void updateEnemies() {
+        int targetEnemies = Math.min(10, 1 + (score / 3));
+
+        while (enemyList.size() < targetEnemies) {
+            Enemy newEnemy = new Enemy(this);
+            enemyList.add(newEnemy);
+            System.out.println("[ENEMY COUNT] Total enemies: " + enemyList.size());
+        }
+
+        while (enemyList.size() > targetEnemies) {
+            enemyList.remove(0);
+        }
+
+        for (Enemy enemy : new ArrayList<>(enemyList)) {
+            if (enemy.life <= 0) {
+                enemyList.remove(enemy);
+            } else {
+                enemy.update();
+            }
+        }
+    }
 }
