@@ -84,20 +84,34 @@ public class Game_Panel extends JPanel implements Runnable {
     }
 
     public void startGameThread() {
-        if (gameThread == null) {
-            Timer timer = new Timer(1000 / FPS, e -> {
+        if (gameThread != null && gameThread.isAlive()) {
+            throw new GameException("Game thread already running");
+        }
+        gameThread = new Thread(() -> {
+            final double drawInterval = 1_000_000_000.0 / FPS; // Nanoseconds per frame
+            double nextDrawTime = System.nanoTime() + drawInterval;
+
+            while (gameThread != null) {
                 try {
                     update();
                     repaint();
-                } catch (Exception ex) {
-                    System.err.println("Game loop error:");
-                    ex.printStackTrace();
+
+                    double remainingTime = nextDrawTime - System.nanoTime();
+                    if (remainingTime > 0) {
+                        Thread.sleep((long) (remainingTime / 1_000_000)); // Convert to milliseconds
+                    }
+                    nextDrawTime += drawInterval;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    break;
                 }
-            });
-            timer.setRepeats(true);
-            timer.start();
-        }
+            }
+        });
+        gameThread.start();
     }
+
+
+
 
     @Override
     public void run() {
@@ -324,6 +338,9 @@ public class Game_Panel extends JPanel implements Runnable {
     }
 
     private void manageObjectCount() {
+        if(score < 0) {
+            throw new GameException("Negative score detected: " + score);
+        }
         int targetCount = Math.min(5, 1 + (score / 5));
 
         for (int i = 1; i <= 5; i++) {

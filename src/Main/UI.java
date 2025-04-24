@@ -33,9 +33,11 @@ public class UI {
 
         try {
             customFont = Font.createFont(Font.TRUETYPE_FONT, new File("res/Font/ThaleahFat.ttf")).deriveFont(48f);
+            if(!(customFont.canDisplayUpTo("Score: 123") == -1)) {
+                throw new GameException("Custom font missing required glyphs");
+            }
         } catch (Exception e) {
-            e.printStackTrace();
-            customFont = new Font("Arial", Font.BOLD, 48); // Czcionka zapasowa
+            throw new GameException("Font loading failed", e);
         }
 
         if(gp.gameState==gp.playState) {
@@ -126,6 +128,9 @@ public class UI {
 
             gp.gameThread = null;
         } else {
+            if(gp.gameState < 0 || gp.gameState > 3) {
+                throw new GameException("Invalid game state: " + gp.gameState);
+            }
             g.setFont(arial_40);
             g.setColor(Color.white);
         }

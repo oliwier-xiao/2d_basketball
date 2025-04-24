@@ -1,5 +1,6 @@
 package Entity;
 
+import Main.GameException;
 import Main.Game_Panel;
 
 import java.awt.*;
@@ -25,6 +26,7 @@ public class Projectile extends Entity {
     }
 
     public void update() {
+
        switch(direction) {
             case "up":
                 Worldy -= speed;
@@ -39,6 +41,7 @@ public class Projectile extends Entity {
                 Worldx += speed;
                 break;
         }
+
         life--;
        if (life <= 0) {
               alive = false;

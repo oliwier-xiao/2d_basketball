@@ -67,6 +67,9 @@ public class Sound {
     }
 
     private void playSound(Clip clip) {
+        if(clip == null) {
+            throw new GameException("Attempted to play null audio clip");
+        }
         if (clip != null) {
             if (clip.isRunning()) {
                 clip.stop();

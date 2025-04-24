@@ -74,7 +74,7 @@ public class AssetManager {
     }
 
     public void respawnObject(int index) {
-        if (index == 0) return; // Never modify hoop through this method
+        if (index == 0) return;
 
         SuperObject obj = gp.obj[index];
         if (obj != null) {
