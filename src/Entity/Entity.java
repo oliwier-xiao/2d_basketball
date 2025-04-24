@@ -1,10 +1,10 @@
 package Entity;
 
 import Main.Game_Panel;
-
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-
-public class Entity {
+// Abstract class can't have its own instance of objects
+public abstract class Entity {
 
     Game_Panel gp;
     public int Worldx;
@@ -42,10 +42,11 @@ public class Entity {
     public int hasball = 0; // 0 - no ball, 1 - has ball
     public boolean alive;
 
-
     public Entity(Game_Panel gp) {
         this.gp = gp;
     }
 
-
+    // Abstract methods
+    public abstract void update();
+    public abstract void draw(Graphics2D g2);
 }

@@ -1,5 +1,6 @@
 package Object;
 
+import Main.GameException;
 import Main.Game_Panel;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -10,12 +11,23 @@ public class OBJ_Heart extends SuperObject {
 
     public OBJ_Heart() {
         name = "Heart";
+        loadImage();
+        collision = false;
+    }
+    @Override
+    public void loadImage() {
         try {
             full = ImageIO.read(getClass().getResourceAsStream("/Objects/heart_full.png"));
             blank = ImageIO.read(getClass().getResourceAsStream("/Objects/heart_blank.png"));
-            image = full; // Default image
+
+            if(full == null || blank == null) {
+                throw new GameException("Heart textures not working properly: "
+                        + (full != null) + ", blank: " + (blank != null) + ")");
+            }
+
+            image = full;
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new GameException("Failed to load heart textures", e);
         }
     }
 }

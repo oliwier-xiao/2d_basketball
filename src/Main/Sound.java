@@ -28,12 +28,19 @@ public class Sound {
         }
     }
 
-    private Clip loadClip(String path) throws UnsupportedAudioFileException, IOException, LineUnavailableException {
-        URL url = getClass().getResource(path);
-        AudioInputStream audioIn = AudioSystem.getAudioInputStream(url);
-        Clip clip = AudioSystem.getClip();
-        clip.open(audioIn);
-        return clip;
+    private Clip loadClip(String path) {
+        try {
+            URL url = getClass().getResource(path);
+            if(url == null) {
+                throw new GameException("Sound file not found: " + path);
+            }
+            AudioInputStream audioIn = AudioSystem.getAudioInputStream(url);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioIn);
+            return clip;
+        } catch (Exception e) {
+            throw new GameException("Failed to load audio clip: " + path, e);
+        }
     }
 
     public void playTheme() {

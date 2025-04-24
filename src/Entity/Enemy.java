@@ -1,5 +1,6 @@
 package Entity;
 
+import Main.GameException;
 import Main.Game_Panel;
 import Object.OBJ_Basket_Hoop;
 import Object.SuperObject;
@@ -40,6 +41,9 @@ public class Enemy extends Entity {
                 hoop = (OBJ_Basket_Hoop)obj;
                 break;
             }
+        }
+        if(hoop == null) {
+            throw new GameException("Cannot spawn enemy - no basketball hoop exists in the game");
         }
 
         if(hoop != null) {

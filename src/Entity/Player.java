@@ -1,5 +1,6 @@
 package Entity;
 
+import Main.GameException;
 import Main.Game_Panel;
 import Main.Keys;
 import Object.OBJ_Basketball;
@@ -51,7 +52,7 @@ public class Player extends Entity {
             right1 = ImageIO.read(getClass().getResourceAsStream("/Player/playerball_right1.png"));
             right2 = ImageIO.read(getClass().getResourceAsStream("/Player/playerball_right2.png"));
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new GameException("Failed to load player textures", e);
         }
     }
 

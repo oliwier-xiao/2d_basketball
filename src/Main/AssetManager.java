@@ -32,6 +32,8 @@ public class AssetManager {
     }
 
     void placeObject(SuperObject obj) {
+        int maxAttempts = 100;
+        int attempts = 0;
         boolean collisionFound;
         do {
             collisionFound = false;
@@ -50,7 +52,10 @@ public class AssetManager {
             int startRow = obj.worldY / gp.tileSize;
             int endCol = (obj.worldX + obj.image.getWidth()) / gp.tileSize;
             int endRow = (obj.worldY + obj.image.getHeight()) / gp.tileSize;
-
+            attempts++;
+            if(attempts > maxAttempts) {
+                throw new GameException("Failed to place object after " + maxAttempts + " attempts");
+            }
             for (int col = startCol; col <= endCol; col++) {
                 for (int row = startRow; row <= endRow; row++) {
                     if (gp.tileManager.checkCollision(col * gp.tileSize, row * gp.tileSize)) {
